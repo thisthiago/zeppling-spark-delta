@@ -38,6 +38,11 @@ ENV PATH="$SPARK_HOME/bin:$PATH"
 # 6. Copia os JARs da pasta local para o container
 COPY jars/*.jar $SPARK_HOME/jars/
 
+# 6.1 Baixar o JAR e mover para a pasta de jars do Spark (Tamanho do arquivo < 100MB não pode ficar no git)
+RUN wget -q -O $SPARK_HOME/jars/aws-java-sdk-bundle-1.12.262.jar \
+    https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar
+
+
 # 7. Copia o arquivo requirements.txt e instala as libs Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
