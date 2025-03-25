@@ -3,3 +3,5 @@ delta-spark==2.4.0
 py4j
 numpy
 pandas
+boto3 
+awscli
