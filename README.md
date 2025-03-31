@@ -61,6 +61,12 @@ mkdir -p ./zeppelin-notebooks
 docker run -d   --name zeppelin   -p 8080:8080   -v $(pwd)/zeppelin-notebooks:/app/notebooks   zeppelin-spark-delta
 ```
 
+ou
+
+```bash
+docker run -d   --name zeppelin   -p 8080:8080   -v $(pwd)/zeppelin-notebooks:/opt/zeppelin-0.12.0-bin-all/notebook   thisthiago/zeppelin-spark-delta
+```
+
 #### Windows (PowerShell):
 
 ```powershell
