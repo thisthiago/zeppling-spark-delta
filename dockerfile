@@ -5,8 +5,15 @@ FROM ubuntu:22.04
 WORKDIR /app
 
 # 1. Instalação de dependências básicas
+#RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#    openjdk-11-jdk \
+#    python3 python3-pip python3-dev \
+#    wget curl unzip tar \
+#    && apt-get clean \
+#    && rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    openjdk-11-jdk \
+    openjdk-17-jdk \
     python3 python3-pip python3-dev \
     wget curl unzip tar \
     && apt-get clean \
@@ -17,14 +24,18 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 # 3. Variáveis de ambiente para Java
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+#ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
+
+
+
 # 4. Configurações de versão
-ENV SPARK_VERSION=3.4.4
-ENV HADOOP_VERSION=3.3.6
+ENV SPARK_VERSION=4.0.0
+ENV HADOOP_VERSION=3.4.1
 ENV ZEPPELIN_VERSION=0.12.0
-ENV DELTA_VERSION=2.4.0
+ENV DELTA_VERSION=4.0.0
 
 # 5. Instalação do Spark
 RUN wget -q "https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz" \
@@ -36,12 +47,13 @@ ENV SPARK_HOME="/opt/spark"
 ENV PATH="$SPARK_HOME/bin:$PATH"
 
 # 6. Copia os JARs da pasta local para o container
-COPY jars/*.jar $SPARK_HOME/jars/
+COPY jars_v4/*.jar $SPARK_HOME/jars/
 
 # 6.1 Baixar o JAR e mover para a pasta de jars do Spark (Tamanho do arquivo < 100MB não pode ficar no git)
-RUN wget -q -O $SPARK_HOME/jars/aws-java-sdk-bundle-1.12.262.jar \
-    https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar
-
+#RUN wget -q -O $SPARK_HOME/jars/aws-java-sdk-bundle-1.12.262.jar \
+#    https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar
+RUN wget -q -O $SPARK_HOME/jars/bundle-2.23.5.jar \
+    https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.23.5/bundle-2.23.5.jar
 
 # 7. Copia o arquivo requirements.txt e instala as libs Python
 COPY requirements.txt .
@@ -69,22 +81,30 @@ ENV ZEPPELIN_ADDR="0.0.0.0"
 ENV ZEPPELIN_PORT="8080"
 
 # 10. Configuração do Zeppelin
-RUN mkdir -p $ZEPPELIN_HOME/logs $ZEPPELIN_HOME/run \
-    && echo '<?xml version="1.0"?>' > $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '<configuration>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '  <property>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '    <name>zeppelin.server.addr</name>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '    <value>0.0.0.0</value>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '    <description>Server binding address</description>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '  </property>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '  <property>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '    <name>zeppelin.server.port</name>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '    <value>8080</value>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '    <description>Server port</description>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '  </property>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && echo '</configuration>' >> $ZEPPELIN_HOME/conf/zeppelin-site.xml \
-    && chmod 644 $ZEPPELIN_HOME/conf/zeppelin-site.xml
+RUN mkdir -p $ZEPPELIN_HOME/logs $ZEPPELIN_HOME/run && \
+    cat <<EOF > $ZEPPELIN_HOME/conf/zeppelin-site.xml
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>zeppelin.server.addr</name>
+    <value>0.0.0.0</value>
+    <description>Server binding address</description>
+  </property>
+  <property>
+    <name>zeppelin.server.port</name>
+    <value>8080</value>
+    <description>Server port</description>
+  </property>
+  <property>
+    <name>zeppelin.spark.enableSupportedVersionCheck</name>
+    <value>false</value>
+    <description>Enable using unsupported Spark versions</description>
+  </property>
+</configuration>
+EOF
+
+RUN chmod 644 $ZEPPELIN_HOME/conf/zeppelin-site.xml
 
 # 11. Configuração de permissões e limpeza
 RUN chmod +x $ZEPPELIN_HOME/bin/zeppelin.sh \

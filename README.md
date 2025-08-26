@@ -112,6 +112,16 @@ docker tag zeppelin-spark-delta:latest seuusuario/zeppelin-spark-delta:latest
 docker push seuusuario/zeppelin-spark-delta:latest
 ```
 
+| Configuração                         | Valor                                           | Descrição                                              |
+|-------------------------------------|------------------------------------------------|--------------------------------------------------------|
+| spark.sql.extensions                 | io.delta.sql.DeltaSparkSessionExtension       | Habilita as extensões do Delta Lake no Spark          |
+| spark.sql.catalog.spark_catalog      | org.apache.spark.sql.delta.catalog.DeltaCatalog | Define o catálogo padrão como Delta                   |
+| spark.comet.catalog.enabled          | true                                           | Ativa o catálogo do Apache DataFusion Comet           |
+| spark.comet.catalog.type             | local                                          | Tipo do catálogo Comet (local, S3, etc.)             |
+| spark.comet.catalog.path             | /tmp/comet_catalog                             | Caminho onde o catálogo local do Comet será armazenado|
+
+
+
 ## 📄 Licença
 
 Apache 2.0 - Livre para uso e modificação
